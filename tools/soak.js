@@ -1,3 +1,4 @@
+// Dauerlauf: 10 Min. Spiel, Heap nach 1 und 10 Min., Konsolenfehler, Save-Rundlauf. Server auf 8080 noetig.
 const { chromium, devices } = require('playwright');
 (async () => {
   const b = await chromium.launch(); const ctx = await b.newContext({ ...devices['iPhone 13'] });

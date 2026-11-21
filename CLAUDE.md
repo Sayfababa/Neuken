@@ -48,6 +48,7 @@ Bosse nach ≈ 14 / 39 / 74 / 164 / 235 min, max. 41 s ohne Belohnung.
 - `tools/tune.sh '<overrides>' [min]` – Median über 8 Läufe. `node tools/autotune.mjs` – Boss-Stärken auf Zielzeiten.
 - `node tools/mksave.mjs 10 > tools/mid.json` – Spielstand „Mitte des Spiels“ erzeugen.
 - `node tools/asset-check.js` – Phase-4-Abnahme: legt Test-PNGs/-Ton temporär in `assets/`, prüft Austausch und Ton, räumt auf.
+- `node tools/soak.js` – 10-Min.-Dauerlauf (Spec §13 Punkte 4, 6, 7).
 - `node tools/layout-check.js` – Screenshots aller Screens (iPhone 13) nach `tools/out/`, prüft Scrollen/Überlauf/Konsolenfehler.
   Vorher `python3 -m http.server 8080` im Projektordner starten.
 - Im Browser: `window.__eg = { state, saveGame, emit }` für automatische Checks.
