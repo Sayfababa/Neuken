@@ -124,3 +124,9 @@
 .bo-item small { color: var(--c-muted); font-size: var(--f-xs); }
 .bo-unlock { text-align: center; color: var(--c-heal); font-weight: 600; }
 .bo-actions { display: flex; flex-direction: column; gap: var(--s-2); }
+
+/* Kampf-Bedienelemente nur ohne offenes Panel (sonst lägen sie verdeckt darunter) */
+.stage.panel-open .skill-bar,
+.stage.panel-open .btn-boss { display: none; }
+.skill-btn.nope { animation: nope .25s; }
+@keyframes nope { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }

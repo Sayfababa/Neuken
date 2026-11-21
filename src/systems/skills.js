@@ -47,7 +47,7 @@ export function init() {
   on('skill:buy', buyPassive);
   on('skill:trigger', ({ id }) => {
     const s = ACTIVE_SKILLS.find(x => x.id === id);
-    if (s) cast(s);
+    if (s && !cast(s)) emit('skill:notReady', { skill: s, remainingMs: state.combat.skillCd[s.id] || 0 });
   });
   on('warrior:attack', autoCast);
   on('tick', (dt) => {

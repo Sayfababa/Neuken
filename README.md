@@ -15,4 +15,4 @@ Auf dem iPhone (gleiches WLAN): `http://<IP-des-Computers>:8080`.
 
 ## Stand
 
-Phase 1: spielbarer Grinding-Loop (HOME, GEAR). Alle Balancing-Werte stehen in `src/data/config.js`.
+Phase 2: 5 Dungeons mit Bossen, alle Seltenheiten, Skills, Item-Vergleich, AUTO EQUIP, Statistiken, Achievements, Export/Import. Alle Balancing-Werte stehen in `src/data/config.js`.

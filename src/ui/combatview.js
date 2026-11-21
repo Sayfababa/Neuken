@@ -70,6 +70,12 @@ export function init() {
   on('enemy:spawned', () => restartAnim(el.enemySprite, 'spawn'));
   on('rewards:gained', (r) => float(`+${fmtNum(r.gold)} Gold  +${fmtNum(r.xp)} XP`, 'z-enemy', 'reward'));
   on('skill:cast', (s) => float(s.name, 'z-warrior', 'skillname'));
+  on('skill:notReady', ({ skill, remainingMs }) => {
+    const wait = remainingMs > 0 ? `noch ${Math.ceil(remainingMs / 1000)} s` : 'kein Ziel';
+    float(`${skill.name}: ${wait}`, 'z-warrior', 'skillname');
+    const btn = el.skills.querySelector(`[data-id="${skill.id}"]`);
+    if (btn) restartAnim(btn, 'nope');
+  });
 }
 
 let lastDungeon = null;
