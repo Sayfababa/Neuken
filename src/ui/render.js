@@ -11,16 +11,29 @@ export function setHTML(el, html) {
   el.innerHTML = html;
 }
 
+// Zuletzt geschriebene Werte je Element: das DOM wird nur bei echten Aenderungen angefasst.
+const written = new WeakMap();
+function cacheOf(el) {
+  let c = written.get(el);
+  if (!c) { c = {}; written.set(el, c); }
+  return c;
+}
+
 // Asset-Markup nur bei Aenderung neu setzen
 export function setAsset(el, html) {
-  if (el.dataset.asset === html) return;
+  const c = cacheOf(el);
+  if (c.asset === html) return;
   el.innerHTML = html;
-  el.dataset.asset = html;
+  c.asset = html;
 }
 
 export function setStyle(el, prop, value) {
-  if (prop.startsWith('--')) el.style.setProperty(prop, value);
-  else el.style[prop] = value;
+  const c = cacheOf(el);
+  const v = String(value);
+  if (c[prop] === v) return;
+  c[prop] = v;
+  if (prop.startsWith('--')) el.style.setProperty(prop, v);
+  else el.style[prop] = v;
 }
 
 export function setClass(el, cls) {

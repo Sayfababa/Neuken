@@ -16,6 +16,7 @@ let attackUntil = 0;
 let hitUntil = 0;
 let skillCount = -1;
 let skillRings = [];
+let dyingUntil = 0;
 
 function float(text, zone, kind) {
   const d = pool[poolNext];
@@ -54,7 +55,7 @@ export function init() {
     bg: $('#stage-bg'), dungeon: $('#dungeon-name'), bossProg: $('#boss-progress'), bossBtn: $('#btn-boss'),
     enemyZone: $('#enemy-zone'), enemyName: $('#enemy-name'), enemySprite: $('#enemy-sprite'),
     enemyFill: $('#enemy-hp-fill'), enemyText: $('#enemy-hp-text'),
-    warrior: $('#warrior-sprite'), warriorFill: $('#warrior-hp-fill'), warriorText: $('#warrior-hp-text'),
+    warrior: $('#warrior-sprite'), warriorZone: $('#warrior-zone'), warriorFill: $('#warrior-hp-fill'), warriorText: $('#warrior-hp-text'),
     fx: $('#fx-layer'), death: $('#death-note'), deathTime: $('#death-time'), skills: $('#skill-bar'),
   };
   for (let i = 0; i < CONFIG.ui.damagePoolSize; i++) pool.push(createEl('div', 'float', el.fx));
@@ -67,7 +68,21 @@ export function init() {
     attackUntil = performance.now() + CONFIG.ui.attackPoseMs;
     restartAnim(el.warrior, 'lunge');
   });
-  on('enemy:spawned', () => restartAnim(el.enemySprite, 'spawn'));
+  on('enemy:spawned', () => {
+    dyingUntil = 0;
+    toggleClass(el.enemyZone, 'dying', false);
+    restartAnim(el.enemySprite, 'spawn');
+  });
+  on('enemy:killed', () => {
+    dyingUntil = performance.now() + CONFIG.ui.enemyDeathMs;
+    restartAnim(el.enemyZone, 'dying');
+  });
+  on('enemy:replace', () => { dyingUntil = 0; });
+  on('warrior:died', () => restartAnim(el.warriorZone, 'fallen'));
+  on('character:revive', () => {
+    toggleClass(el.warriorZone, 'fallen', false);
+    restartAnim(el.warriorZone, 'revive');
+  });
   on('rewards:gained', (r) => float(`+${fmtNum(r.gold)} Gold  +${fmtNum(r.xp)} XP`, 'z-enemy', 'reward'));
   on('skill:cast', (s) => float(s.name, 'z-warrior', 'skillname'));
   on('skill:notReady', ({ skill, remainingMs }) => {
@@ -95,7 +110,7 @@ export function frame(now) {
   setAttr(el.bossBtn, 'hidden', !bossAvailable());
 
   const e = cb.enemy;
-  toggleClass(el.enemyZone, 'gone', !e);
+  toggleClass(el.enemyZone, 'gone', !e && now >= dyingUntil);
   if (e) {
     toggleClass(el.enemyZone, 'boss', !!e.isBoss);
     toggleClass(el.enemySprite, 'stunned', cb.stunTimer > 0);

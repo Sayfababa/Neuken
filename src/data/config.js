@@ -99,6 +99,11 @@ export const CONFIG = {
     toastMs: 2400,
     toastMax: 3,
     reloadDelayMs: 800,
+    enemyDeathMs: 420,          // Sterbe-Animation des Gegners (kuerzer als Respawn)
+    lootPoolSize: 4,
+    lootStartY: 0.3,            // Startpunkt der Beute: Hoehe des Gegners (Anteil der Spielflaeche)
+    lootGlowFrom: 'rare',
+    lootBigGlowFrom: 'legendary',
   },
 };
 

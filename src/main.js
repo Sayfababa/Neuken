@@ -27,13 +27,14 @@ import * as dungeonScreen from './ui/screens/dungeon.js';
 import * as heroScreen from './ui/screens/hero.js';
 import * as sheet from './ui/sheet.js';
 import * as nav from './ui/nav.js';
+import * as fx from './ui/fx.js';
 
 const { save: loaded, notice } = loadGame();
 loadIntoState(loaded);
 
 // Reihenfolge zaehlt: Werte zuerst, Boss nach Loot (sammelt dessen Drops), Speichern zuletzt.
 for (const sys of [character, dungeon, combat, progression, loot, itemgen, inventory, equipment, skills, boss, audio, save]) sys.init();
-for (const ui of [hud, combatview, toast, sheet, home, gear, skillsScreen, dungeonScreen, heroScreen, nav]) ui.init();
+for (const ui of [hud, combatview, toast, sheet, home, gear, skillsScreen, dungeonScreen, heroScreen, nav, fx]) ui.init();
 
 if (notice === 'corrupt') toast.show('Spielstand war beschädigt – gesichert, neues Spiel gestartet.', { kind: 'info' });
 
