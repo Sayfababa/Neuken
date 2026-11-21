@@ -15,4 +15,4 @@ Auf dem iPhone (gleiches WLAN): `http://<IP-des-Computers>:8080`.
 
 ## Stand
 
-Phase 2: 5 Dungeons mit Bossen, alle Seltenheiten, Skills, Item-Vergleich, AUTO EQUIP, Statistiken, Achievements, Export/Import. Alle Balancing-Werte stehen in `src/data/config.js`.
+Phase 3: Balancing (Tempo-Ziele per Simulation), Animationen, Übergänge, Performance. Alle Balancing-Werte stehen in `src/data/config.js` und `src/data/dungeons.js`.
