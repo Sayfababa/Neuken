@@ -1,0 +1,38 @@
+:root {
+  color-scheme: dark;
+  /* Farben */
+  --c-bg: #0b0a10;
+  --c-surface: #16141f;
+  --c-surface-2: #201d2c;
+  --c-line: #2e2a3d;
+  --c-text: #ece8f4;
+  --c-muted: #9089a6;
+  --c-accent: #e2b04a;
+  --c-gold: #facc15;
+  --c-xp: #8b5cf6;
+  --c-hp: #dc2626;
+  --c-hp-enemy: #b91c1c;
+  --c-heal: #22c55e;
+  --c-danger: #f87171;
+
+  /* Abstaende */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+
+  /* Schrift */
+  --f-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  --f-xs: 11px;
+  --f-sm: 13px;
+  --f-md: 15px;
+  --f-lg: 18px;
+  --f-xl: 24px;
+
+  --radius: 10px;
+  --tap: 44px;
+
+  /* Zonen (Spec Abschnitt 4) */
+  --hud-h: 72px;
+  --nav-h: 72px;
+}

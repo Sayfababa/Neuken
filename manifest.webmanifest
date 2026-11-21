@@ -1,0 +1,9 @@
+{
+  "name": "Eternal Grind",
+  "short_name": "Eternal Grind",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0a10",
+  "theme_color": "#0b0a10"
+}

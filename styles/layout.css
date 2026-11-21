@@ -1,0 +1,62 @@
+/* Bildschirmraster: HUD / Spielflaeche / Navigation. Summe = Bildschirmhoehe. */
+html { height: 100%; background: var(--c-bg); }
+
+body {
+  height: 100dvh;
+  max-width: 520px;          /* Desktop-Test: Telefonbreite */
+  margin: 0 auto;
+  display: grid;
+  grid-template-rows:
+    calc(env(safe-area-inset-top) + var(--hud-h))
+    1fr
+    calc(var(--nav-h) + env(safe-area-inset-bottom));
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: var(--f-family);
+  font-size: var(--f-md);
+  overflow: hidden;
+}
+
+.hud {
+  padding: env(safe-area-inset-top) calc(env(safe-area-inset-right) + var(--s-3)) 0 calc(env(safe-area-inset-left) + var(--s-3));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--s-2);
+  background: linear-gradient(180deg, #14111d, var(--c-surface));
+  border-bottom: 1px solid var(--c-line);
+  min-height: 0;
+  z-index: 5;
+}
+
+.stage {
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.nav {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  background: var(--c-surface);
+  border-top: 1px solid var(--c-line);
+  z-index: 5;
+}
+
+/* Querformat auf Touch-Geraeten: Hinweis statt eigenem Layout */
+.rotate-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--c-bg);
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: var(--f-lg);
+  padding: var(--s-4);
+}
+@media (orientation: landscape) and (pointer: coarse) {
+  .rotate-overlay { display: flex; }
+}

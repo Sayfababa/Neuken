@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0b0a10">
+  <title>Eternal Grind</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles/reset.css">
+  <link rel="stylesheet" href="styles/tokens.css">
+  <link rel="stylesheet" href="styles/layout.css">
+  <link rel="stylesheet" href="styles/components.css">
+</head>
+<body>
+  <header id="hud" class="hud">
+    <div class="hud-row">
+      <div class="hud-level"><small>LV</small><span id="hud-level">1</span></div>
+      <div class="hud-name" id="hud-name"></div>
+      <div class="hud-cur"><span class="cur-icon" id="hud-gold-icon"></span><span id="hud-gold">0</span></div>
+      <div class="hud-cur gems"><span class="cur-icon" id="hud-gem-icon"></span><span id="hud-gems">0</span></div>
+    </div>
+    <div class="xpbar"><div class="xpbar-fill" id="hud-xp-fill"></div><span class="xpbar-text" id="hud-xp-text"></span></div>
+  </header>
+
+  <main id="stage" class="stage">
+    <div class="stage-bg" id="stage-bg"></div>
+    <div class="dungeon-name" id="dungeon-name"></div>
+
+    <div class="enemy-zone" id="enemy-zone">
+      <div class="enemy-name" id="enemy-name"></div>
+      <div class="bar enemy-bar"><div class="bar-fill" id="enemy-hp-fill"></div><span class="bar-text" id="enemy-hp-text"></span></div>
+      <div class="enemy-sprite" id="enemy-sprite"></div>
+    </div>
+
+    <div class="warrior-zone">
+      <div class="warrior-sprite" id="warrior-sprite"></div>
+      <div class="bar warrior-bar"><div class="bar-fill" id="warrior-hp-fill"></div><span class="bar-text" id="warrior-hp-text"></span></div>
+    </div>
+
+    <div class="fx-layer" id="fx-layer"></div>
+    <div class="death-note" id="death-note">Gefallen – weiter in <span id="death-time">3</span> s</div>
+    <div class="toasts" id="toasts"></div>
+
+    <section class="panel" id="panel-gear" hidden>
+      <div class="gear-top">
+        <div class="gear-silhouette" id="gear-silhouette"></div>
+        <div class="slot-grid" id="slot-grid"></div>
+      </div>
+      <div class="gear-stats" id="gear-stats"></div>
+      <div class="inv-head"><span>Inventar</span><span id="inv-count">0 / 120</span></div>
+      <div class="inv-list scroll" id="inv-list"></div>
+    </section>
+
+    <div class="sheet-backdrop" id="sheet-backdrop" hidden></div>
+    <section class="sheet" id="sheet" hidden>
+      <button class="sheet-close" id="sheet-close" aria-label="Schließen"></button>
+      <div id="sheet-body"></div>
+      <button class="btn-primary" id="sheet-equip">AUSRÜSTEN</button>
+      <p class="sheet-equipped" id="sheet-equipped" hidden>Ausgerüstet</p>
+    </section>
+  </main>
+
+  <nav id="nav" class="nav"></nav>
+
+  <div class="rotate-overlay"><p>Bitte Gerät hochkant halten</p></div>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
