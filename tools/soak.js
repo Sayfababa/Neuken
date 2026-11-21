@@ -12,9 +12,12 @@ const { chromium, devices } = require('playwright');
   await p.waitForTimeout(60000); const h1 = await heap();
   for (let i = 0; i < 9; i++) { await p.waitForTimeout(60000); if (i % 3 === 0) { await p.click('[data-tab=gear]'); await p.waitForTimeout(500); await p.click('[data-tab=home]'); } }
   const h10 = await heap();
-  const before = await p.evaluate(() => JSON.stringify({ l: __eg.state.character.level, g: __eg.state.currency.gold, inv: __eg.state.inventory.length, eq: __eg.state.equipment }));
-  await p.evaluate(() => __eg.saveGame()); await p.reload(); await p.waitForTimeout(300);
-  const after = await p.evaluate(() => JSON.stringify({ l: __eg.state.character.level, g: __eg.state.currency.gold, inv: __eg.state.inventory.length, eq: __eg.state.equipment }));
-  console.log(JSON.stringify({ heap1MB: (h1/1e6).toFixed(2), heap10MB: (h10/1e6).toFixed(2), growthPct: ((h10/h1-1)*100).toFixed(1), saveRoundtrip: before === after, level: JSON.parse(before).l, errs }));
+  // Speichern und Zustand im selben Augenblick festhalten, nach dem Neuladen sofort vergleichen
+  const keys = ['character','currency','equipment','inventory','skills','dungeons','stats','achievements'];
+  const before = await p.evaluate((keys) => { __eg.saveGame(); const s = JSON.parse(localStorage.getItem('eternal_grind_save_v1')); return JSON.stringify(keys.map(k => s[k])); }, keys);
+  await p.reload({ waitUntil: 'commit' });
+  const after = await p.evaluate((keys) => new Promise(r => setTimeout(() => r(JSON.stringify(keys.map(k => __eg.state[k]))), 0)), keys);
+  const lvl = JSON.parse(before)[0].level;
+  console.log(JSON.stringify({ heap1MB: (h1/1e6).toFixed(2), heap10MB: (h10/1e6).toFixed(2), growthPct: ((h10/h1-1)*100).toFixed(1), saveRoundtrip: before === after, level: lvl, errs }));
   await b.close();
 })();
