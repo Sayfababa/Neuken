@@ -1,8 +1,13 @@
 # Project Eternal Grind – Übergabe für neue Sitzungen
 
 Mobile Dark-Fantasy-Idle-RPG (nur WARRIOR) für iPhone/Safari, Hochformat. Reines HTML/CSS/JS (ES-Module),
-kein Framework, kein Build, keine Abhängigkeiten. Die verbindliche Spezifikation ist der „MASTER PROMPT —
-PROJECT ETERNAL GRIND“ des Auftraggebers. Bitte ihn um den Text, falls er nicht in der Sitzung vorliegt.
+kein Framework, kein Build, keine Abhängigkeiten. Die verbindliche Spezifikation liegt vollständig in
+`docs/MASTER_PROMPT.md` – zu Beginn jeder Sitzung lesen.
+
+**Test-Link für den Auftraggeber (iPhone):** https://claude.ai/artifact/Vp1qWwemyMHVAaUQYinUHQ (privates Artifact,
+Stand Phase 3). Nach jeder Phase aktualisieren: Artifact-Tool, `action: publish`, `url` = dieser Link,
+`file_path` = `index.html`, `files` = alle Dateien unter `src/`, `styles/` (später `assets/`) plus `manifest.webmanifest`.
+Vorher den Link mit `action: read` lesen (sonst wird die Veröffentlichung abgelehnt).
 
 ## Arbeitsweise (aus der Spec, verbindlich)
 - Auftraggeber kann nicht programmieren, testet nur im iPhone-Browser. Nie Code erklären, nur was er sieht/testen soll.
