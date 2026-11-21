@@ -79,6 +79,14 @@ export function setChildren(parent, nodes) {
   parent.replaceChildren(...nodes);
 }
 
+// Alle Elemente zu einem Selektor durch frisch erzeugtes Markup ersetzen
+export function replaceAll(selector, html, root = document) {
+  for (const old of root.querySelectorAll(selector)) {
+    const el = elementFromHTML(html);
+    if (el) old.replaceWith(el);
+  }
+}
+
 export function moveToFront(el) {
   el.parentNode.prepend(el);
 }

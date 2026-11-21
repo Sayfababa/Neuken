@@ -105,6 +105,21 @@ export const CONFIG = {
     lootGlowFrom: 'rare',
     lootBigGlowFrom: 'legendary',
   },
+
+  // Phase 4: Soundeffekte (keine Spielwerte). Dateien: assets/audio/<file>.mp3, siehe assets/README.md.
+  // volume 0..1; minGapMs verhindert Dauerfeuer bei hoher Angriffsgeschwindigkeit.
+  audio: {
+    dir: 'assets/audio/',
+    ext: '.mp3',
+    masterVolume: 0.8,
+    sounds: {
+      hit:     { file: 'sfx_hit',     volume: 0.5, minGapMs: 90 },
+      crit:    { file: 'sfx_crit',    volume: 0.7, minGapMs: 90 },
+      levelup: { file: 'sfx_levelup', volume: 0.9, minGapMs: 500 },
+      loot:    { file: 'sfx_loot',    volume: 0.7, minGapMs: 150 },
+      boss:    { file: 'sfx_boss',    volume: 0.9, minGapMs: 1000 },
+    },
+  },
 };
 
 // ---------- Formeln ----------

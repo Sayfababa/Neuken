@@ -1,8 +1,13 @@
 // Asset-Manager. Spiellogik und UI kennen nur IDs; was dahinter steckt, weiss nur diese Datei.
-// Phase 1-3: CSS/SVG-Platzhalter. Phase 4: echte Dateien mit Fallback auf diese Platzhalter.
+// Phase 4: liegt unter assets/<ordner>/<id>.png eine Datei, wird sie verwendet; sonst greift der
+// CSS/SVG-Platzhalter unten. Ordner und Masse je ID: assets/README.md.
 
+import { emit } from '../core/events.js';
+
+// data-asset: erlaubt der UI, ein Platzhalter-Element gegen die nachgeladene Datei zu tauschen.
+let currentId = '';
 const svg = (body, cls = '') =>
-  `<svg class="asset ${cls}" viewBox="0 0 100 100" aria-hidden="true">${body}</svg>`;
+  `<svg class="asset ${cls}" data-asset="${currentId}" viewBox="0 0 100 100" aria-hidden="true">${body}</svg>`;
 
 // ---------- Krieger ----------
 function warrior(pose) {
@@ -87,7 +92,7 @@ const BG = {
 
 function background(id) {
   const b = BG[id];
-  return `<div class="asset-bg" style="background:linear-gradient(180deg, ${b.sky})">
+  return `<div class="asset-bg" data-asset="${id}" style="background:linear-gradient(180deg, ${b.sky})">
     <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">${b.deco(b.c)}</svg></div>`;
 }
 
@@ -131,14 +136,39 @@ const FX = {
 
 // ---------- Register ----------
 const REGISTRY = {};
-for (const pose of ['idle', 'attack', 'hit', 'death']) REGISTRY['warrior_' + pose] = () => warrior(pose);
-for (const m of Object.keys(MONSTER_SVG)) REGISTRY['monster_' + m] = () => svg(MONSTER_SVG[m], 'monster');
-for (const b of Object.keys(BOSS)) REGISTRY[b] = () => boss(b);
-for (const b of Object.keys(BG)) REGISTRY[b] = () => background(b);
-for (const i of Object.keys(ICON)) REGISTRY[i] = () => svg(ICON[i], 'icon');
-for (const f of Object.keys(FX)) REGISTRY[f] = () => svg(FX[f], 'fx');
-// Cooldown-Ring: Fortschritt kommt per CSS-Variable --p
-REGISTRY.ui_cooldown_ring_001 = () => svg('<circle cx="50" cy="50" r="46" pathLength="100"/>', 'ring');
+const KIND = {};                 // id -> CSS-Klasse des Platzhalters (bleibt auch beim Bild erhalten)
+const reg = (id, kind, make) => { REGISTRY[id] = make; KIND[id] = kind; };
+for (const pose of ['idle', 'attack', 'hit', 'death']) reg('warrior_' + pose, `pose-${pose}`, () => warrior(pose));
+for (const m of Object.keys(MONSTER_SVG)) reg('monster_' + m, 'monster', () => svg(MONSTER_SVG[m], 'monster'));
+for (const b of Object.keys(BOSS)) reg(b, 'boss', () => boss(b));
+for (const b of Object.keys(BG)) reg(b, 'bg', () => background(b));
+for (const i of Object.keys(ICON)) reg(i, 'icon', () => svg(ICON[i], 'icon'));
+for (const f of Object.keys(FX)) reg(f, 'fx', () => svg(FX[f], 'fx'));
+// Cooldown-Ring: Fortschritt kommt per CSS-Variable --p (Funktionsgrafik, nicht austauschbar)
+reg('ui_cooldown_ring_001', 'ring', () => svg('<circle cx="50" cy="50" r="46" pathLength="100"/>', 'ring'));
+
+// ---------- Dateien ----------
+export const ASSET_ROOT = 'assets/';
+// Unterordner je ID-Praefix (Reihenfolge: spezifischster zuerst)
+const FOLDERS = [
+  ['warrior_', 'warrior'], ['monster_', 'monsters'], ['boss_', 'bosses'], ['bg_', 'backgrounds'],
+  ['weapon_', 'items'], ['armor_', 'items'], ['accessory_', 'items'],
+  ['skill_', 'skills'], ['fx_', 'fx'], ['ui_', 'ui'],
+];
+const NOT_REPLACEABLE = new Set(['ui_cooldown_ring_001']);
+
+export function fileFor(id) {
+  if (NOT_REPLACEABLE.has(id)) return null;
+  const f = FOLDERS.find(([p]) => id.startsWith(p));
+  return f ? `${ASSET_ROOT}${f[1]}/${id}.png` : null;
+}
+
+const files = new Map();         // id -> URL einer erfolgreich geladenen Datei
+
+function fileMarkup(id, url) {
+  if (KIND[id] === 'bg') return `<div class="asset-bg asset-file" data-asset="${id}" style="background-image:url('${url}')"></div>`;
+  return `<img class="asset asset-file ${KIND[id]}" data-asset="${id}" src="${url}" alt="" draggable="false" decoding="sync">`;
+}
 
 const cache = new Map();
 const warned = new Set();
@@ -151,7 +181,9 @@ export const Assets = {
       if (!warned.has(id)) { warned.add(id); console.warn('[assets] unbekannte ID:', id); }
       return svg('<rect x="10" y="10" width="80" height="80" fill="#ff00ff"/>', 'missing');
     }
-    const html = make();
+    currentId = id;
+    const html = files.has(id) ? fileMarkup(id, files.get(id)) : make();
+    currentId = '';
     cache.set(id, html);
     return html;
   },
@@ -161,10 +193,32 @@ export const Assets = {
     return `<svg class="asset icon" viewBox="0 0 100 100" aria-hidden="true"><use href="#asset-${id}"/></svg>`;
   },
   // Einmalig ins Dokument einzuhaengen (render.js): alle Item-/UI-Icons als Vorlagen.
+  // Bei vorhandener Datei enthaelt die Vorlage das Bild, alle Verweise zeigen es sofort.
   spriteSheet() {
     return `<svg width="0" height="0" style="position:absolute" aria-hidden="true">${
-      Object.keys(ICON).map(id => `<symbol id="asset-${id}" viewBox="0 0 100 100">${ICON[id]}</symbol>`).join('')}</svg>`;
+      Object.keys(ICON).map(id => `<symbol id="asset-${id}" viewBox="0 0 100 100">${files.has(id)
+        ? `<image href="${files.get(id)}" width="100" height="100" preserveAspectRatio="xMidYMid meet"/>`
+        : ICON[id]}</symbol>`).join('')}</svg>`;
   },
+  isIcon(id) { return id in ICON; },
   has(id) { return id in REGISTRY; },
   ids() { return Object.keys(REGISTRY); },
+  fromFile(id) { return files.has(id); },
+  // Phase 4: fuer jede ID still pruefen, ob eine Datei vorliegt. Fehlt sie, bleibt der Platzhalter.
+  // Meldet jede gefundene Datei einzeln per 'asset:ready', damit die UI tauschen kann.
+  load() {
+    for (const id of Object.keys(REGISTRY)) {
+      const url = fileFor(id);
+      if (!url || typeof Image === 'undefined') continue;
+      const img = new Image();
+      img.onload = () => {
+        if (!img.naturalWidth) return;
+        files.set(id, url);
+        cache.delete(id);
+        emit('asset:ready', { id });
+      };
+      img.onerror = () => {};    // keine Datei (oder unlesbar): Platzhalter bleibt
+      img.src = url;
+    }
+  },
 };

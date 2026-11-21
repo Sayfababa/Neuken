@@ -2,6 +2,9 @@
 .asset { width: 100%; height: 100%; }
 .asset-bg { position: absolute; inset: 0; }
 .asset-bg svg { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .9; }
+/* Phase 4: echte Bilddateien (assets/) an Stelle der Platzhalter */
+img.asset { display: block; object-fit: contain; pointer-events: none; -webkit-user-drag: none; }
+.asset-bg.asset-file { background: center / cover no-repeat; }
 
 /* ---------- HUD ---------- */
 .hud-row { display: flex; align-items: center; gap: var(--s-2); }

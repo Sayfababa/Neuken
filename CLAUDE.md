@@ -5,8 +5,9 @@ kein Framework, kein Build, keine Abhängigkeiten. Die verbindliche Spezifikatio
 `docs/MASTER_PROMPT.md` – zu Beginn jeder Sitzung lesen.
 
 **Test-Link für den Auftraggeber (iPhone):** https://claude.ai/artifact/Vp1qWwemyMHVAaUQYinUHQ (privates Artifact,
-Stand Phase 3). Nach jeder Phase aktualisieren: Artifact-Tool, `action: publish`, `url` = dieser Link,
-`file_path` = `index.html`, `files` = alle Dateien unter `src/`, `styles/` (später `assets/`) plus `manifest.webmanifest`.
+Stand Phase 4). Nach jeder Phase aktualisieren: Artifact-Tool, `action: publish`, `url` = dieser Link,
+`file_path` = `index.html`, `files` = alle Dateien unter `src/`, `styles/` (später `assets/`) plus `manifest.webmanifest`
+(vorhandene Dateien unter `assets/` mit hochladen, aber nicht `.gitkeep`/`README.md`).
 Vorher den Link mit `action: read` lesen (sonst wird die Veröffentlichung abgelehnt).
 
 ## Arbeitsweise (aus der Spec, verbindlich)
@@ -19,11 +20,17 @@ Vorher den Link mit `action: read` lesen (sonst wird die Veröffentlichung abgel
 
 ## Stand
 - Phase 1 ✅ Grinding-Loop · Phase 2 ✅ Progression · Phase 3 ✅ Feinschliff & Balancing (Abnahme durch Auftraggeber auf dem iPhone steht aus)
-- **Nächste: Phase 4** – Audio & finale Assets: `/assets/`-Struktur, Lade-/Fallback-Logik in `assets.js`
-  (fehlt eine Datei → Platzhalter), Doku der Maße pro Asset-ID, Audio-Manager (Treffer, Krit, Levelup, Loot, Boss)
-  in `src/systems/audio.js` (derzeit Stub). Keine Bilder/Sounds selbst erzeugen. Abnahme: ein PNG in `/assets/`
-  ersetzt den Platzhalter ohne Änderung an Spiellogik.
-- Danach Phase 5: PWA (Manifest existiert minimal, Service Worker fehlt), Icons, Offline, Gerätetests.
+- Phase 4 ✅ (Freigabe ausstehend) Audio & finale Assets:
+  - `assets/<ordner>/<id>.png` ersetzt den SVG-Platzhalter (Ordner je ID-Präfix in `fileFor()`, `assets.js`).
+    `Assets.load()` prüft beim Start jede ID per `new Image()`; Treffer → Event `asset:ready` → `ui/assetswap.js`
+    tauscht bereits gezeichnete Elemente (`[data-asset=id]`) und die Icon-Vorlagen (`#asset-sprites`).
+    Fehlende Dateien erzeugen erwartete 404-Meldungen; Prüfwerkzeuge ignorieren Konsolenmeldungen aus `/assets/`.
+  - Maße/Dateinamen je ID für den Auftraggeber: `assets/README.md`.
+  - `systems/audio.js`: Web Audio, Dateien `assets/audio/sfx_{hit,crit,levelup,loot,boss}.mp3`, Lautstärken in
+    `CONFIG.audio`. Kontext entsteht erst bei erster Berührung (iOS). Fehlt eine Datei → still. `settings.sfx` wird beachtet.
+  - Offen (beim Auftraggeber erfragt): Klänge synthetisch per Web Audio erzeugen, solange keine Dateien da sind?
+    Schalter „Ton an/aus“ im HERO-Screen gewünscht? (Spielstand hat `settings.sfx`, aber noch keine Bedienung.)
+- **Nächste: Phase 5** – PWA (Manifest existiert minimal, Service Worker fehlt; `assets/` mitcachen), Icons, Offline, Gerätetests.
 
 ## Vom Auftraggeber bestätigte Annahmen (nicht im Spec)
 Start-Stärke/Vitalität 0 · Gegner-Angriffe 0,8/s · HP-Regeneration 1,5 %/s · Affix-Basiswerte in `data/items.js` ·
@@ -40,6 +47,7 @@ Bosse nach ≈ 14 / 39 / 74 / 164 / 235 min, max. 41 s ohne Belohnung.
 - `node tools/pace.mjs <seed> <minuten> '{"monster.hpGrowth":1.11}'` – Spielersimulation ohne Browser (6 h in < 1 s).
 - `tools/tune.sh '<overrides>' [min]` – Median über 8 Läufe. `node tools/autotune.mjs` – Boss-Stärken auf Zielzeiten.
 - `node tools/mksave.mjs 10 > tools/mid.json` – Spielstand „Mitte des Spiels“ erzeugen.
+- `node tools/asset-check.js` – Phase-4-Abnahme: legt Test-PNGs/-Ton temporär in `assets/`, prüft Austausch und Ton, räumt auf.
 - `node tools/layout-check.js` – Screenshots aller Screens (iPhone 13) nach `tools/out/`, prüft Scrollen/Überlauf/Konsolenfehler.
   Vorher `python3 -m http.server 8080` im Projektordner starten.
 - Im Browser: `window.__eg = { state, saveGame, emit }` für automatische Checks.

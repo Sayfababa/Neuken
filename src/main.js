@@ -28,13 +28,18 @@ import * as heroScreen from './ui/screens/hero.js';
 import * as sheet from './ui/sheet.js';
 import * as nav from './ui/nav.js';
 import * as fx from './ui/fx.js';
+import * as assetswap from './ui/assetswap.js';
+import { Assets } from './systems/assets.js';
 
 const { save: loaded, notice } = loadGame();
 loadIntoState(loaded);
 
 // Reihenfolge zaehlt: Werte zuerst, Boss nach Loot (sammelt dessen Drops), Speichern zuletzt.
 for (const sys of [character, dungeon, combat, progression, loot, itemgen, inventory, equipment, skills, boss, audio, save]) sys.init();
-for (const ui of [hud, combatview, toast, sheet, home, gear, skillsScreen, dungeonScreen, heroScreen, nav, fx]) ui.init();
+for (const ui of [hud, combatview, toast, sheet, home, gear, skillsScreen, dungeonScreen, heroScreen, nav, fx, assetswap]) ui.init();
+
+// Phase 4: vorhandene Grafikdateien nachladen (fehlende bleiben still beim Platzhalter)
+Assets.load();
 
 if (notice === 'corrupt') toast.show('Spielstand war beschädigt – gesichert, neues Spiel gestartet.', { kind: 'info' });
 

@@ -6,7 +6,8 @@ const save = fs.readFileSync(require('path').join(__dirname,'mid.json'),'utf8');
   const ctx = await b.newContext({ ...devices['iPhone 13'] });
   await ctx.addInitScript(v => { if (!sessionStorage.getItem('x')) { sessionStorage.setItem('x','1'); localStorage.clear(); localStorage.setItem('eternal_grind_save_v1', v); } }, save);
   const p = await ctx.newPage(); const errs=[];
-  p.on('console', m => { if (m.type()==='error'||m.type()==='warning') errs.push(m.text()); });
+  // Phase 4: fehlende Dateien unter assets/ sind erwartet (Platzhalter greift) und zaehlen nicht als Fehler
+  p.on('console', m => { if ((m.type()==='error'||m.type()==='warning') && !(m.location().url||'').includes('/assets/')) errs.push(m.text()); });
   p.on('pageerror', e => errs.push('PAGEERROR '+e.message));
   await p.goto('http://localhost:8080/'); await p.waitForTimeout(2500);
   const lay = () => p.evaluate(() => ({ noScroll: document.body.scrollHeight === innerHeight, over: [...document.querySelectorAll('body *')].filter(e => { if (e.closest('.inv-list') && e !== e.closest('.inv-list')) return false; const r=e.getBoundingClientRect(); return r.width && r.height && (r.right>innerWidth+.5||r.left<-.5); }).map(e=>e.className.baseVal??e.className).slice(0,4),
