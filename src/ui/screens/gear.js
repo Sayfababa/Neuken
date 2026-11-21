@@ -5,7 +5,7 @@ import { CONFIG, rarityIndex, itemTotals } from '../../data/config.js';
 import { AFFIXES, AFFIX_IDS, SLOTS, SLOT_TYPE_LABEL } from '../../data/items.js';
 import { Assets } from '../../systems/assets.js';
 import { compare, replacedBy } from '../../systems/equipment.js';
-import { $, setHTML, setText, setAttr, onTap, onTapWithin, esc, fmtNum } from '../render.js';
+import { $, setHTML, setText, setAttr, setClass, onTap, onTapWithin, elementFromHTML, setChildren, esc, fmtNum } from '../render.js';
 import { openSheet } from '../sheet.js';
 import { show as toast } from '../toast.js';
 
@@ -46,24 +46,46 @@ function sortedInventory() {
     rarityIndex(b.rarity) - rarityIndex(a.rarity) || b.itemLevel - a.itemLevel);
 }
 
+// Zeilen werden je Item einmal gebaut und wiederverwendet; nur Pfeile werden aktualisiert.
+const rows = new Map();   // itemId -> { el, arrow, cmp }
+
+function rowHTML(it) {
+  const r = rarityOf(it.rarity);
+  return `<button class="inv-row" data-id="${it.id}" style="--rc:${r.color}">
+      <span class="inv-icon">${Assets.ref(it.asset)}</span>
+      <span class="inv-main"><span class="inv-name">${esc(it.name)}</span>
+        <span class="inv-sub">iLvl ${it.itemLevel} · ${SLOT_TYPE_LABEL[it.slotType]} · ${esc(affixText(it.affixes[0]))}</span></span>
+      <span class="inv-arrow"></span>
+    </button>`;
+}
+
 function renderInventory() {
   const inv = sortedInventory();
   setText(el.count, `${inv.length} / ${CONFIG.inventory.max}`);
   setAttr(el.auto, 'disabled', !inv.length);
+  const alive = new Set(inv.map(it => it.id));
+  for (const id of rows.keys()) if (!alive.has(id)) rows.delete(id);
   if (!inv.length) {
     setHTML(el.list, '<p class="inv-empty">Noch keine Items. Besiege Gegner – sie lassen Beute fallen.</p>');
     return;
   }
-  setHTML(el.list, inv.map(it => {
-    const r = rarityOf(it.rarity);
-    const [sym, cls] = ARROW[compare(it)];
-    return `<button class="inv-row" data-id="${it.id}" style="--rc:${r.color}">
-      <span class="inv-icon">${Assets.get(it.asset)}</span>
-      <span class="inv-main"><span class="inv-name">${esc(it.name)}</span>
-        <span class="inv-sub">iLvl ${it.itemLevel} · ${SLOT_TYPE_LABEL[it.slotType]} · ${esc(affixText(it.affixes[0]))}</span></span>
-      <span class="inv-arrow ${cls}">${sym}</span>
-    </button>`;
-  }).join(''));
+  const nodes = inv.map(it => {
+    let row = rows.get(it.id);
+    if (!row) {
+      const node = elementFromHTML(rowHTML(it));
+      row = { el: node, arrow: node.querySelector('.inv-arrow'), cmp: null };
+      rows.set(it.id, row);
+    }
+    const c = compare(it);
+    if (c !== row.cmp) {
+      row.cmp = c;
+      const [sym, cls] = ARROW[c];
+      setText(row.arrow, sym);
+      setClass(row.arrow, `inv-arrow ${cls}`);
+    }
+    return row.el;
+  });
+  setChildren(el.list, nodes);
 }
 
 function refresh() {
@@ -121,6 +143,7 @@ export function init() {
     list: $('#inv-list'), count: $('#inv-count'), auto: $('#btn-auto-equip'),
   };
   setHTML($('#gear-silhouette'), Assets.get('warrior_idle'));
+  setHTML($('#asset-sprites'), Assets.spriteSheet());
 
   onTapWithin(el.list, '.inv-row', (row) => {
     const it = state.inventory.find(x => x.id === row.dataset.id);

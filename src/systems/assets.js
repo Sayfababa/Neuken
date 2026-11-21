@@ -155,6 +155,16 @@ export const Assets = {
     cache.set(id, html);
     return html;
   },
+  // Leichtgewichtiger Verweis fuer lange Listen: nutzt die einmal abgelegte Vorlage (spriteSheet).
+  ref(id) {
+    if (!(id in ICON)) return this.get(id);
+    return `<svg class="asset icon" viewBox="0 0 100 100" aria-hidden="true"><use href="#asset-${id}"/></svg>`;
+  },
+  // Einmalig ins Dokument einzuhaengen (render.js): alle Item-/UI-Icons als Vorlagen.
+  spriteSheet() {
+    return `<svg width="0" height="0" style="position:absolute" aria-hidden="true">${
+      Object.keys(ICON).map(id => `<symbol id="asset-${id}" viewBox="0 0 100 100">${ICON[id]}</symbol>`).join('')}</svg>`;
+  },
   has(id) { return id in REGISTRY; },
   ids() { return Object.keys(REGISTRY); },
 };

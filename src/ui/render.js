@@ -63,6 +63,22 @@ export function createEl(tag, cls, parent) {
   return el;
 }
 
+// Ein Element aus HTML erzeugen (noch nicht eingehaengt)
+export function elementFromHTML(html) {
+  const t = document.createElement('template');
+  t.innerHTML = html.trim();
+  return t.content.firstElementChild;
+}
+
+// Kinder in genau dieser Reihenfolge setzen; unveraenderte Knoten bleiben erhalten.
+export function setChildren(parent, nodes) {
+  const cur = parent.children;
+  let same = cur.length === nodes.length;
+  for (let i = 0; same && i < nodes.length; i++) same = cur[i] === nodes[i];
+  if (same) return;
+  parent.replaceChildren(...nodes);
+}
+
 export function moveToFront(el) {
   el.parentNode.prepend(el);
 }
