@@ -14,7 +14,7 @@ function spawn() {
   const d = currentDungeon();
   let enemy;
   if (state.combat.bossFight) {
-    const s = bossStats(rng, d.level);
+    const s = bossStats(rng, d);
     enemy = {
       type: d.boss, name: d.bossName, asset: d.boss, ...s, hp: s.maxHP,
       isBoss: true, dungeonId: d.id, firstKill: !state.dungeons.bossesDefeated.includes(d.id),

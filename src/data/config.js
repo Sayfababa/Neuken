@@ -28,6 +28,8 @@ export const CONFIG = {
     deathPauseMs: 3000,
   },
 
+  xp: { base: 50, exp: 1.55 },   // xpBenoetigt(level) = floor(base * level^exp)
+
   damage: {
     rollMin: 0.90, rollMax: 1.10,
     mitigationBase: 50, mitigationPerLevel: 10,
@@ -35,17 +37,17 @@ export const CONFIG = {
   },
 
   monster: {
-    hpBase: 60, hpGrowth: 1.18,
-    attackBase: 8, attackGrowth: 1.15,
+    hpBase: 60, hpGrowth: 1.11,              // Phase 3: Spec 1.18 (Dungeon 5 sonst unerreichbar)
+    attackBase: 8, attackGrowth: 1.09,       // Phase 3: Spec 1.15
     defenseBase: 3, defenseGrowth: 1.12,
-    xpBase: 12, xpExp: 1.20,
+    xpBase: 15, xpExp: 1.20,                 // Phase 3: Spec xpBase 12 (Level 10 nach ~11 min)
     goldBase: 8, goldExp: 1.15, goldRollMin: 0.8, goldRollMax: 1.2,
     attacksPerSec: 0.8,         // ANNAHME (bestaetigt)
-    respawnMs: 600,             // ANNAHME (bestaetigt): Pause zwischen zwei Gegnern
+    respawnMs: 450,             // ANNAHME (bestaetigt), Phase 3: 600 -> 450
   },
 
   boss: {
-    hpMult: 12, attackMult: 2.0, xpMult: 15, goldMult: 20,
+    hpMult: 12, attackMult: 2.0, xpMult: 15, goldMult: 20,  // Standard; je Boss in dungeons.js ueberschrieben (Phase 3)
     dropChance: 1.0, minRarity: 'rare', firstKillRarity: 'epic',
     killsRequired: 10,          // Spec Abschnitt 9: Boss-Button nach 10 Kills
     typeMult: 1.0,              // ANNAHME: Boss nutzt gegnerHP/-Angriff ohne Typ-Multiplikator
@@ -65,12 +67,12 @@ export const CONFIG = {
     { id: 'uncommon',  label: 'Uncommon',  weight: 25.0, affixes: 2, mult: 1.15, color: '#4ade80' },
     { id: 'rare',      label: 'Rare',      weight: 10.0, affixes: 3, mult: 1.30, color: '#60a5fa' },
     { id: 'epic',      label: 'Epic',      weight: 4.0,  affixes: 4, mult: 1.50, color: '#a855f7' },
-    { id: 'legendary', label: 'Legendary', weight: 0.9,  affixes: 5, mult: 1.75, color: '#f59e0b' },
-    { id: 'mythic',    label: 'Mythic',    weight: 0.1,  affixes: 6, mult: 2.00, color: '#ef4444' },
+    { id: 'legendary', label: 'Legendary', weight: 0.06, affixes: 5, mult: 1.75, color: '#f59e0b' }, // Phase 3: Spec 0.9 (erstes Legendary ~60-90 min)
+    { id: 'mythic',    label: 'Mythic',    weight: 0.0067, affixes: 6, mult: 2.00, color: '#ef4444' }, // Phase 3: Spec 0.1 (Verhaeltnis 1:9 beibehalten)
   ],
 
   affix: {
-    levelExp: 0.85, rollMin: 0.85, rollMax: 1.15,
+    levelExp: 0.6, rollMin: 0.85, rollMax: 1.15,  // Phase 3: Spec 0.85 (Item-Sprung zwischen Dungeons zu gross)
     minValue: 1,                // ANNAHME (bestaetigt): kein Affix mit Wert 0
   },
 
@@ -116,7 +118,7 @@ export function itemTotals(item, into = emptyTotals()) {
 
 export const itemScoreOf = (item) => itemScore(itemTotals(item));
 
-export const xpRequired = (level) => Math.floor(50 * Math.pow(level, 1.55));
+export const xpRequired = (level) => Math.floor(CONFIG.xp.base * Math.pow(level, CONFIG.xp.exp));
 
 // passive: { skillId: stufe }  -> Prozent-Boni multiplikativ, Krit-Chance additiv
 export function passiveBonus(passive = {}) {
@@ -171,13 +173,14 @@ export function monsterStats(rng, dungeonLevel, typeMult) {
   };
 }
 
-export function bossStats(rng, dungeonLevel) {
+// dungeon.bossHpMult / bossAttackMult: Feinabstimmung je Boss (Phase 3), sonst globale Werte
+export function bossStats(rng, dungeon) {
   const B = CONFIG.boss;
-  const m = monsterStats(rng, dungeonLevel, B.typeMult);
+  const m = monsterStats(rng, dungeon.level, B.typeMult);
   return {
     ...m,
-    maxHP: Math.floor(m.maxHP * B.hpMult),
-    attack: Math.floor(m.attack * B.attackMult),
+    maxHP: Math.floor(m.maxHP * (dungeon.bossHpMult ?? B.hpMult)),
+    attack: Math.floor(m.attack * (dungeon.bossAttackMult ?? B.attackMult)),
     xp: Math.floor(m.xp * B.xpMult),
     gold: Math.floor(m.gold * B.goldMult),
   };
