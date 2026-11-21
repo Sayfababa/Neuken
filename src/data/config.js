@@ -1,7 +1,8 @@
 // ALLE Balancing-Zahlen und Formeln (Spec Abschnitt 6).
-// Werte mit "ANNAHME" stehen NICHT im Spec und muessen vom Auftraggeber bestaetigt werden.
+// Werte mit "ANNAHME (bestaetigt)" standen nicht im Spec und wurden vom Auftraggeber nach Phase 1 bestaetigt.
 
 import { AFFIXES, AFFIX_IDS } from './items.js';
+import { PASSIVE_SKILLS } from './skills.js';
 
 export const CONFIG = {
   // Logik-Takt (Spec Abschnitt 2)
@@ -11,8 +12,8 @@ export const CONFIG = {
   character: {
     name: 'Warrior',
     startLevel: 1,
-    startStrength: 0,           // ANNAHME
-    startVitality: 0,           // ANNAHME
+    startStrength: 0,           // ANNAHME (bestaetigt)
+    startVitality: 0,           // ANNAHME (bestaetigt)
     strengthPerLevel: 2,
     vitalityPerLevel: 2,
     base: {
@@ -23,7 +24,7 @@ export const CONFIG = {
       critChance: 5, critChanceCap: 75,
       critDamage: 150,
     },
-    hpRegenPctPerSec: 1.5,      // ANNAHME: Regeneration in % maxHP pro Sekunde
+    hpRegenPctPerSec: 1.5,      // ANNAHME (bestaetigt): Regeneration in % maxHP pro Sekunde
     deathPauseMs: 3000,
   },
 
@@ -39,19 +40,20 @@ export const CONFIG = {
     defenseBase: 3, defenseGrowth: 1.12,
     xpBase: 12, xpExp: 1.20,
     goldBase: 8, goldExp: 1.15, goldRollMin: 0.8, goldRollMax: 1.2,
-    attacksPerSec: 0.8,         // ANNAHME
-    respawnMs: 600,             // ANNAHME: Pause zwischen zwei Gegnern
+    attacksPerSec: 0.8,         // ANNAHME (bestaetigt)
+    respawnMs: 600,             // ANNAHME (bestaetigt): Pause zwischen zwei Gegnern
   },
 
   boss: {
     hpMult: 12, attackMult: 2.0, xpMult: 15, goldMult: 20,
     dropChance: 1.0, minRarity: 'rare', firstKillRarity: 'epic',
+    killsRequired: 10,          // Spec Abschnitt 9: Boss-Button nach 10 Kills
+    typeMult: 1.0,              // ANNAHME: Boss nutzt gegnerHP/-Angriff ohne Typ-Multiplikator
   },
 
   loot: {
     dropChance: 0.22,
-    // Phase 1: einfache Tabelle (nur diese Seltenheiten). Phase 2 schaltet alle frei.
-    enabledRarities: ['common', 'uncommon', 'rare'],
+    enabledRarities: ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'],
     highRarityShiftPerLevel: 0.03, // gilt fuer Rare und hoeher
     highRarityFrom: 'rare',
     itemLevelPerDungeonLevel: 3, itemLevelSpread: 2,
@@ -69,7 +71,7 @@ export const CONFIG = {
 
   affix: {
     levelExp: 0.85, rollMin: 0.85, rollMax: 1.15,
-    minValue: 1,                // ANNAHME: kein Affix mit Wert 0
+    minValue: 1,                // ANNAHME (bestaetigt): kein Affix mit Wert 0
   },
 
   // Nutzwert fuer Vergleich / Ring-Wahl / Verwerfen (Spec Abschnitt 7)
@@ -82,6 +84,7 @@ export const CONFIG = {
     version: 1,
     autosaveMs: 10000,
     corruptPrefix: 'eg_save_corrupt_',
+    backupPrefix: 'eg_save_backup_',
     autosaveFromRarity: 'rare',
   },
 
@@ -93,7 +96,7 @@ export const CONFIG = {
     hitPoseMs: 200,
     toastMs: 2400,
     toastMax: 3,
-    inventoryRowsPerChunk: 120,
+    reloadDelayMs: 800,
   },
 };
 
@@ -115,18 +118,30 @@ export const itemScoreOf = (item) => itemScore(itemTotals(item));
 
 export const xpRequired = (level) => Math.floor(50 * Math.pow(level, 1.55));
 
-export function deriveStats(ch, gear) {
+// passive: { skillId: stufe }  -> Prozent-Boni multiplikativ, Krit-Chance additiv
+export function passiveBonus(passive = {}) {
+  const out = { attack: 0, maxHP: 0, defense: 0, attackSpeed: 0, critChance: 0 };
+  for (const p of PASSIVE_SKILLS) {
+    const lv = passive[p.id] || 0;
+    out[p.stat] += lv * (p.perLevelPct ?? p.perLevelFlat);
+  }
+  return out;
+}
+
+export function deriveStats(ch, gear, passive) {
   const b = CONFIG.character.base;
+  const pb = passiveBonus(passive);
   const lv = ch.level - 1;
   const strength = ch.strength + gear.strength;
   const vitality = ch.vitality + gear.vitality;
+  const pct = (v, p) => v * (1 + p / 100);
   return {
     strength, vitality,
-    maxHP: Math.floor(b.hp + b.hpPerLevel * lv + vitality * b.hpPerVitality + gear.hp),
-    attack: Math.floor(b.attack + b.attackPerLevel * lv + strength * b.attackPerStrength + gear.attackDamage),
-    defense: Math.floor(b.defense + b.defensePerLevel * lv + gear.defense),
-    attackSpeed: Math.min(b.attackSpeedCap, b.attackSpeed + gear.attackSpeed),
-    critChance: Math.min(b.critChanceCap, b.critChance + gear.critChance),
+    maxHP: Math.floor(pct(b.hp + b.hpPerLevel * lv + vitality * b.hpPerVitality + gear.hp, pb.maxHP)),
+    attack: Math.floor(pct(b.attack + b.attackPerLevel * lv + strength * b.attackPerStrength + gear.attackDamage, pb.attack)),
+    defense: Math.floor(pct(b.defense + b.defensePerLevel * lv + gear.defense, pb.defense)),
+    attackSpeed: Math.min(b.attackSpeedCap, pct(b.attackSpeed + gear.attackSpeed, pb.attackSpeed)),
+    critChance: Math.min(b.critChanceCap, b.critChance + gear.critChance + pb.critChance),
     critDamage: b.critDamage + gear.critDamage,
   };
 }
@@ -156,17 +171,30 @@ export function monsterStats(rng, dungeonLevel, typeMult) {
   };
 }
 
+export function bossStats(rng, dungeonLevel) {
+  const B = CONFIG.boss;
+  const m = monsterStats(rng, dungeonLevel, B.typeMult);
+  return {
+    ...m,
+    maxHP: Math.floor(m.maxHP * B.hpMult),
+    attack: Math.floor(m.attack * B.attackMult),
+    xp: Math.floor(m.xp * B.xpMult),
+    gold: Math.floor(m.gold * B.goldMult),
+  };
+}
+
 export function rarityIndex(id) {
   return CONFIG.rarities.findIndex(r => r.id === id);
 }
 
-// Liefert [[rarityId, gewicht], ...] normalisiert auf Summe 100.
-export function rarityWeights(dungeonLevel) {
+// Liefert [[rarityId, gewicht], ...] normalisiert auf Summe 100. minRarity: optionale Untergrenze.
+export function rarityWeights(dungeonLevel, minRarity = null) {
   const l = CONFIG.loot;
   const from = rarityIndex(l.highRarityFrom);
   const list = CONFIG.rarities
     .map((r, i) => [r.id, i >= from ? r.weight * (1 + l.highRarityShiftPerLevel * (dungeonLevel - 1)) : r.weight])
-    .filter(([id]) => l.enabledRarities.includes(id));
+    .filter(([id]) => l.enabledRarities.includes(id))
+    .filter(([id]) => !minRarity || rarityIndex(id) >= rarityIndex(minRarity));
   const sum = list.reduce((s, [, w]) => s + w, 0);
   return list.map(([id, w]) => [id, (w / sum) * 100]);
 }

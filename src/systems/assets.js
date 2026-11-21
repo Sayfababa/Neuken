@@ -110,7 +110,14 @@ const ICON = {
   ui_nav_gear_001: '<path d="M20 16 L40 10 Q50 20 60 10 L80 16 L74 88 L26 88 Z" fill="none" stroke="currentColor" stroke-width="9" stroke-linejoin="round"/>',
   ui_nav_skills_001: '<path d="M56 6 L24 56 H48 L42 94 L76 40 H52 Z" fill="none" stroke="currentColor" stroke-width="8" stroke-linejoin="round"/>',
   ui_nav_dungeon_001: '<path d="M18 90 V40 Q18 12 50 12 Q82 12 82 40 V90 Z M38 90 V58 Q38 46 50 46 Q62 46 62 58 V90" fill="none" stroke="currentColor" stroke-width="8"/>',
-  ui_nav_hero_001: '<circle cx="50" cy="32" r="18" fill="none" stroke="currentColor" stroke-width="9"/><path d="M16 92 Q16 58 50 58 Q84 58 84 92" fill="none" stroke="currentColor" stroke-width="9"/>',
+  ui_trophy_001: '<path d="M28 14 H72 V40 Q72 62 50 64 Q28 62 28 40 Z" fill="#facc15"/><path d="M28 22 H14 Q14 44 30 46 M72 22 H86 Q86 44 70 46" fill="none" stroke="#facc15" stroke-width="6"/><rect x="44" y="62" width="12" height="14" fill="#ca8a04"/><rect x="30" y="76" width="40" height="10" rx="3" fill="#a16207"/>',
+  ui_lock_001: '<rect x="24" y="44" width="52" height="42" rx="6" fill="#4b5563"/><path d="M34 44 V32 Q34 16 50 16 Q66 16 66 32 V44" fill="none" stroke="#6b7280" stroke-width="8"/><circle cx="50" cy="62" r="6" fill="#1f2937"/>',
+  ui_boss_001: '<path d="M18 40 Q18 12 50 12 Q82 12 82 40 V60 L70 70 V86 H30 V70 L18 60 Z" fill="#e5e7eb"/><circle cx="37" cy="44" r="9" fill="#7f1d1d"/><circle cx="63" cy="44" r="9" fill="#7f1d1d"/><path d="M40 72 V84 M50 72 V84 M60 72 V84" stroke="#111" stroke-width="4"/>',
+  skill_heavy_strike_001: '<path d="M20 86 L68 38" stroke="#e5e7eb" stroke-width="12" stroke-linecap="round"/><path d="M60 22 L80 42 L90 16 Z" fill="#f59e0b"/><circle cx="74" cy="28" r="20" fill="none" stroke="#fde68a" stroke-width="5"/>',
+  skill_whirlwind_001: '<path d="M50 50 m-6 0 a6 6 0 1 1 12 0 a14 14 0 1 1 -28 0 a22 22 0 1 1 44 0 a30 30 0 1 1 -60 0" fill="none" stroke="#7dd3fc" stroke-width="7" stroke-linecap="round"/>',
+  skill_shield_bash_001: '<path d="M22 18 H78 V46 Q78 74 50 88 Q22 74 22 46 Z" fill="#78716c" stroke="#d6d3d1" stroke-width="5"/><path d="M50 30 L58 46 L74 48 L60 58 L64 74 L50 64 L36 74 L40 58 L26 48 L42 46 Z" fill="#fde047"/>',
+  skill_berserker_rage_001: '<path d="M50 6 Q74 34 66 54 Q84 48 80 30 Q96 60 78 82 Q62 98 40 92 Q14 84 16 58 Q18 40 32 30 Q30 48 42 52 Q32 26 50 6 Z" fill="#ef4444"/><path d="M50 50 Q62 66 54 82 Q40 84 38 70 Q38 58 50 50 Z" fill="#fde047"/>',
+  ui_nav_hero_001:'<circle cx="50" cy="32" r="18" fill="none" stroke="currentColor" stroke-width="9"/><path d="M16 92 Q16 58 50 58 Q84 58 84 92" fill="none" stroke="currentColor" stroke-width="9"/>',
 };
 
 // ---------- Effekte ----------
@@ -130,6 +137,8 @@ for (const b of Object.keys(BOSS)) REGISTRY[b] = () => boss(b);
 for (const b of Object.keys(BG)) REGISTRY[b] = () => background(b);
 for (const i of Object.keys(ICON)) REGISTRY[i] = () => svg(ICON[i], 'icon');
 for (const f of Object.keys(FX)) REGISTRY[f] = () => svg(FX[f], 'fx');
+// Cooldown-Ring: Fortschritt kommt per CSS-Variable --p
+REGISTRY.ui_cooldown_ring_001 = () => svg('<circle cx="50" cy="50" r="46" pathLength="100"/>', 'ring');
 
 const cache = new Map();
 const warned = new Set();

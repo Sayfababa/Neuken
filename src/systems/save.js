@@ -52,9 +52,11 @@ export function loadGame() {
   }
 }
 
+let suspended = false;   // nach Import: nichts mehr ueberschreiben, bis die Seite neu laedt
+
 export function saveGame() {
   const ls = storage();
-  if (!ls) return false;
+  if (!ls || suspended) return false;
   state.savedAt = Date.now();
   try {
     ls.setItem(S.key, JSON.stringify(snapshot()));
@@ -67,7 +69,27 @@ export function saveGame() {
 }
 
 export function exportSave() {
+  state.savedAt = Date.now();
   return JSON.stringify(snapshot());
+}
+
+// Spielstand aus Text uebernehmen. Der bisherige Stand wird vorher gesichert.
+// Liefert true bei Erfolg; danach muss die Seite neu geladen werden.
+export function importSave(text) {
+  const ls = storage();
+  if (!ls) return false;
+  let parsed;
+  try { parsed = JSON.parse(String(text).trim()); } catch { return false; }
+  if (!isObj(parsed) || !isObj(parsed.character) || !Number.isFinite(parsed.character.level)) return false;
+  const migrated = migrate(parsed);
+  try {
+    ls.setItem(S.backupPrefix + Date.now(), JSON.stringify(snapshot()));
+    ls.setItem(S.key, JSON.stringify(migrated));
+  } catch {
+    return false;
+  }
+  suspended = true;
+  return true;
 }
 
 let sinceSave = 0;
@@ -87,4 +109,7 @@ export function init() {
   on('character:levelup', () => { pending = true; });
   on('item:created', (item) => { if (rarityIndex(item.rarity) >= fromRarity) pending = true; });
   on('equipment:changed', () => { pending = true; });
+  on('boss:defeated', () => { pending = true; });
+  on('skills:changed', () => { pending = true; });
+  on('dungeon:changed', () => { pending = true; });
 }

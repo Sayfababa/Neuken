@@ -1,7 +1,7 @@
 // Inventar mit Obergrenze. Bei vollem Inventar wird das schwaechste Common verworfen.
 import { state } from '../core/state.js';
 import { on, emit } from '../core/events.js';
-import { CONFIG, itemScoreOf } from '../data/config.js';
+import { CONFIG, itemScoreOf, rarityIndex } from '../data/config.js';
 
 function weakestIndex(list) {
   let pool = list.map((it, i) => [it, i]).filter(([it]) => it.rarity === 'common');
@@ -20,6 +20,9 @@ function add(item) {
   inv.push(item);
   const s = state.stats;
   if (item.itemLevel > s.highestItemLevel) s.highestItemLevel = item.itemLevel;
+  const ri = rarityIndex(item.rarity);
+  if (ri > s.highestRarity) s.highestRarity = ri;
+  s.foundByRarity[item.rarity] = (s.foundByRarity[item.rarity] || 0) + 1;
   if (item.rarity === 'legendary') s.legendariesFound += 1;
   if (item.rarity === 'mythic') s.mythicsFound += 1;
   if (inv.length > CONFIG.inventory.max) {

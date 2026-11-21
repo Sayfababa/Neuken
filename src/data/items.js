@@ -1,5 +1,5 @@
 // Basis-Items, Affix-Pools und Namenslisten.
-// basis-Werte der Affixe sind ANNAHMEN (Spec nennt basisWert(affixTyp) ohne Zahlen).
+// basis-Werte der Affixe: ANNAHME (bestaetigt) — Spec nennt basisWert(affixTyp) ohne Zahlen.
 // scale: Umrechnung des ganzzahligen Affixwerts in die Spieleinheit (Attack Speed in 0.01 Angriffen/s).
 
 export const AFFIXES = {

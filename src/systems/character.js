@@ -11,7 +11,7 @@ function gearTotals() {
 }
 
 export function recompute() {
-  state.derived = deriveStats(state.character, gearTotals());
+  state.derived = deriveStats(state.character, gearTotals(), state.skills.passive);
   const ch = state.character;
   if (ch.currentHP == null || ch.currentHP > state.derived.maxHP) ch.currentHP = state.derived.maxHP;
   emit('stats:changed');

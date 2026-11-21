@@ -1,25 +1,31 @@
-// GEAR: 9 Slots, Inventarliste (scrollt im Panel), Item-Sheet mit AUSRUESTEN.
+// GEAR: 9 Slots, AUTO EQUIP, Inventarliste (scrollt im Panel) mit Vergleichspfeilen, Item-Sheet mit Vergleich.
 import { state } from '../../core/state.js';
 import { on, emit } from '../../core/events.js';
-import { CONFIG, rarityIndex } from '../../data/config.js';
-import { AFFIXES, SLOTS, SLOT_TYPE_LABEL } from '../../data/items.js';
+import { CONFIG, rarityIndex, itemTotals } from '../../data/config.js';
+import { AFFIXES, AFFIX_IDS, SLOTS, SLOT_TYPE_LABEL } from '../../data/items.js';
 import { Assets } from '../../systems/assets.js';
+import { compare, replacedBy } from '../../systems/equipment.js';
 import { $, setHTML, setText, setAttr, onTap, onTapWithin, esc, fmtNum } from '../render.js';
+import { openSheet } from '../sheet.js';
 import { show as toast } from '../toast.js';
 
 let el;
 let open = false;
 let dirty = true;
-let sheetItem = null;
 
 const rarityOf = (id) => CONFIG.rarities.find(r => r.id === id);
+const ARROW = { 1: ['↑', 'up'], 0: ['=', 'eq'], '-1': ['↓', 'down'] };
+
+function fmtValue(type, v) {
+  const def = AFFIXES[type];
+  if (def.fmt === 'pct') return `${v}%`;
+  if (def.fmt === 'speed') return `${v.toFixed(2)}/s`;
+  return fmtNum(v);
+}
 
 function affixText(a) {
-  const def = AFFIXES[a.type];
-  const v = a.value * def.scale;
-  if (def.fmt === 'pct') return `+${v}% ${def.label}`;
-  if (def.fmt === 'speed') return `+${v.toFixed(2)}/s ${def.label}`;
-  return `+${fmtNum(v)} ${def.label}`;
+  const v = a.value * AFFIXES[a.type].scale;
+  return `+${fmtValue(a.type, v)} ${AFFIXES[a.type].label}`;
 }
 
 function renderSlots() {
@@ -32,7 +38,7 @@ function renderSlots() {
   const d = state.derived;
   setHTML(el.stats, `<span>ATK <b>${fmtNum(d.attack)}</b></span><span>HP <b>${fmtNum(d.maxHP)}</b></span>
     <span>DEF <b>${fmtNum(d.defense)}</b></span><span>SPD <b>${d.attackSpeed.toFixed(2)}</b></span>
-    <span>CRIT <b>${d.critChance}%</b></span>`);
+    <span>CRIT <b>${d.critChance.toFixed(1).replace('.0', '')}%</b></span>`);
 }
 
 function sortedInventory() {
@@ -43,16 +49,19 @@ function sortedInventory() {
 function renderInventory() {
   const inv = sortedInventory();
   setText(el.count, `${inv.length} / ${CONFIG.inventory.max}`);
+  setAttr(el.auto, 'disabled', !inv.length);
   if (!inv.length) {
     setHTML(el.list, '<p class="inv-empty">Noch keine Items. Besiege Gegner – sie lassen Beute fallen.</p>');
     return;
   }
   setHTML(el.list, inv.map(it => {
     const r = rarityOf(it.rarity);
+    const [sym, cls] = ARROW[compare(it)];
     return `<button class="inv-row" data-id="${it.id}" style="--rc:${r.color}">
       <span class="inv-icon">${Assets.get(it.asset)}</span>
       <span class="inv-main"><span class="inv-name">${esc(it.name)}</span>
         <span class="inv-sub">iLvl ${it.itemLevel} · ${SLOT_TYPE_LABEL[it.slotType]} · ${esc(affixText(it.affixes[0]))}</span></span>
+      <span class="inv-arrow ${cls}">${sym}</span>
     </button>`;
   }).join(''));
 }
@@ -64,60 +73,73 @@ function refresh() {
   renderInventory();
 }
 
-function openSheet(item, equipped) {
-  sheetItem = item;
+function itemHead(item) {
   const r = rarityOf(item.rarity);
-  setHTML(el.sheetBody, `
-    <div class="sheet-head" style="--rc:${r.color}">
+  return `<div class="sheet-head" style="--rc:${r.color}">
       <span class="sheet-icon">${Assets.get(item.asset)}</span>
       <div><h2 class="sheet-name">${esc(item.name)}</h2>
       <p class="sheet-meta">${r.label} · iLvl ${item.itemLevel} · ${SLOT_TYPE_LABEL[item.slotType]}</p></div>
-    </div>
-    <ul class="sheet-affixes">${item.affixes.map(a => `<li>${esc(affixText(a))}</li>`).join('')}</ul>`);
-  setAttr(el.equipBtn, 'hidden', equipped);
-  setAttr(el.equippedNote, 'hidden', !equipped);
-  setAttr(el.sheet, 'hidden', false);
-  setAttr(el.backdrop, 'hidden', false);
+    </div>`;
 }
 
-function closeSheet() {
-  sheetItem = null;
-  setAttr(el.sheet, 'hidden', true);
-  setAttr(el.backdrop, 'hidden', true);
+// Vergleichstabelle: neuer Wert und Differenz zum ersetzten Item, gruen/rot
+function compareRows(item, cur) {
+  const a = itemTotals(item);
+  const b = cur ? itemTotals(cur) : null;
+  const types = AFFIX_IDS.filter(t => a[t] || (b && b[t]));
+  return types.map(t => {
+    const diff = b ? a[t] - b[t] : a[t];
+    const cls = diff > 0 ? 'up' : diff < 0 ? 'down' : 'eq';
+    const sign = diff > 0 ? '+' : diff < 0 ? '−' : '±';
+    return `<li><span>${AFFIXES[t].label}</span><b>${a[t] ? fmtValue(t, a[t]) : '–'}</b>
+      <em class="${cls}">${sign}${fmtValue(t, Math.abs(diff))}</em></li>`;
+  }).join('');
+}
+
+function openItem(item, equipped) {
+  if (equipped) {
+    openSheet(`${itemHead(item)}<ul class="sheet-affixes">${item.affixes.map(a => `<li>${esc(affixText(a))}</li>`).join('')}</ul>
+      <p class="sheet-note">Ausgerüstet</p>`);
+    return;
+  }
+  const cur = replacedBy(item);
+  const vs = cur
+    ? `<p class="sheet-vs">Vergleich mit <span style="color:${rarityOf(cur.rarity).color}">${esc(cur.name)}</span></p>`
+    : '<p class="sheet-vs">Slot ist frei</p>';
+  openSheet(`${itemHead(item)}${vs}<ul class="sheet-compare">${compareRows(item, cur)}</ul>`, [{
+    label: 'AUSRÜSTEN', primary: true,
+    onTap: () => {
+      emit('equip:request', { itemId: item.id });
+      toast(`Ausgerüstet: ${item.name}`, { kind: 'info' });
+    },
+  }]);
 }
 
 export function init() {
   el = {
     panel: $('#panel-gear'), slots: $('#slot-grid'), stats: $('#gear-stats'),
-    list: $('#inv-list'), count: $('#inv-count'),
-    sheet: $('#sheet'), sheetBody: $('#sheet-body'), backdrop: $('#sheet-backdrop'),
-    equipBtn: $('#sheet-equip'), equippedNote: $('#sheet-equipped'), close: $('#sheet-close'),
+    list: $('#inv-list'), count: $('#inv-count'), auto: $('#btn-auto-equip'),
   };
   setHTML($('#gear-silhouette'), Assets.get('warrior_idle'));
-  setHTML(el.close, Assets.get('ui_close_001'));
 
   onTapWithin(el.list, '.inv-row', (row) => {
     const it = state.inventory.find(x => x.id === row.dataset.id);
-    if (it) openSheet(it, false);
+    if (it) openItem(it, false);
   });
   onTapWithin(el.slots, '.slot.filled', (btn) => {
     const it = state.equipment[btn.dataset.slot];
-    if (it) openSheet(it, true);
+    if (it) openItem(it, true);
   });
-  onTap(el.equipBtn, () => {
-    if (!sheetItem) return;
-    const name = sheetItem.name;
-    emit('equip:request', { itemId: sheetItem.id });
-    closeSheet();
-    toast(`Ausgerüstet: ${name}`, { kind: 'info' });
+  onTap(el.auto, () => emit('equip:auto'));
+  on('equip:autoDone', ({ changed }) => {
+    if (!changed.length) { toast('AUTO EQUIP: bereits optimal', { kind: 'info' }); return; }
+    const names = changed.map(id => SLOTS.find(s => s.id === id).label);
+    toast(`AUTO EQUIP: ${changed.length} geändert – ${names.join(', ')}`, { kind: 'info' });
   });
-  onTap(el.close, closeSheet);
-  onTap(el.backdrop, closeSheet);
 
   on('ui:tab', (tab) => {
     open = tab === 'gear';
     setAttr(el.panel, 'hidden', !open);
-    if (!open) closeSheet();
     if (open && dirty) refresh();
   });
   on('inventory:changed', refresh);

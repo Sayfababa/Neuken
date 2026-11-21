@@ -18,7 +18,10 @@ export function freshSave(seed = 1) {
     inventory: [],
     skills: { passive: {}, active: {} },
     dungeons: { current: 1, unlocked: [1], killsInCurrent: 0, bossesDefeated: [] },
-    stats: { totalKills: 0, killsByType: {}, totalXP: 0, legendariesFound: 0, mythicsFound: 0, highestItemLevel: 0 },
+    stats: {
+      totalKills: 0, killsByType: {}, totalXP: 0, legendariesFound: 0, mythicsFound: 0, highestItemLevel: 0,
+      bossKills: 0, highestRarity: -1, foundByRarity: {},
+    },
     achievements: [],
     prestigeCount: 0,
     settings: { sfx: true, reducedMotion: false },
@@ -38,6 +41,10 @@ function freshRuntime() {
       enemyCd: 0,
       dead: false,
       deadTimer: 0,
+      stunTimer: 0,          // Gegner betaeubt (ms)
+      buff: null,            // { attackPct, speedPct, timer }
+      skillCd: {},           // aktive Skills: verbleibender Cooldown (ms)
+      bossFight: false,      // Bosskampf angefordert/aktiv
     },
   };
 }

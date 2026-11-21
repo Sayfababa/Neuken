@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="styles/tokens.css">
   <link rel="stylesheet" href="styles/layout.css">
   <link rel="stylesheet" href="styles/components.css">
+  <link rel="stylesheet" href="styles/screens.css">
 </head>
 <body>
   <header id="hud" class="hud">
@@ -27,6 +28,7 @@
   <main id="stage" class="stage">
     <div class="stage-bg" id="stage-bg"></div>
     <div class="dungeon-name" id="dungeon-name"></div>
+    <div class="boss-progress" id="boss-progress"></div>
 
     <div class="enemy-zone" id="enemy-zone">
       <div class="enemy-name" id="enemy-name"></div>
@@ -39,6 +41,9 @@
       <div class="bar warrior-bar"><div class="bar-fill" id="warrior-hp-fill"></div><span class="bar-text" id="warrior-hp-text"></span></div>
     </div>
 
+    <div class="skill-bar" id="skill-bar"></div>
+    <button class="btn-boss" id="btn-boss" hidden>BOSS</button>
+
     <div class="fx-layer" id="fx-layer"></div>
     <div class="death-note" id="death-note">Gefallen – weiter in <span id="death-time">3</span> s</div>
     <div class="toasts" id="toasts"></div>
@@ -49,20 +54,54 @@
         <div class="slot-grid" id="slot-grid"></div>
       </div>
       <div class="gear-stats" id="gear-stats"></div>
-      <div class="inv-head"><span>Inventar</span><span id="inv-count">0 / 120</span></div>
+      <div class="inv-head">
+        <span>Inventar <span id="inv-count">0 / 120</span></span>
+        <button class="btn-small" id="btn-auto-equip">AUTO EQUIP</button>
+      </div>
       <div class="inv-list scroll" id="inv-list"></div>
+    </section>
+
+    <section class="panel" id="panel-skills" hidden>
+      <h2 class="panel-title">Passiv</h2>
+      <div class="skill-list" id="skills-passive"></div>
+      <h2 class="panel-title">Aktiv <small>– feuern automatisch</small></h2>
+      <div class="skill-list" id="skills-active"></div>
+    </section>
+
+    <section class="panel" id="panel-dungeon" hidden>
+      <h2 class="panel-title">Dungeons</h2>
+      <div class="dg-list" id="dungeon-list"></div>
+    </section>
+
+    <section class="panel" id="panel-hero" hidden>
+      <div class="hero-stats" id="hero-stats"></div>
+      <h2 class="panel-title">Kills</h2>
+      <div class="hero-kills" id="hero-kills"></div>
+      <h2 class="panel-title">Achievements</h2>
+      <div class="hero-ach" id="hero-ach"></div>
+      <div class="hero-actions">
+        <button class="btn-secondary" id="btn-export">Spielstand exportieren</button>
+        <button class="btn-secondary" id="btn-import">Spielstand importieren</button>
+      </div>
     </section>
 
     <div class="sheet-backdrop" id="sheet-backdrop" hidden></div>
     <section class="sheet" id="sheet" hidden>
       <button class="sheet-close" id="sheet-close" aria-label="Schließen"></button>
-      <div id="sheet-body"></div>
-      <button class="btn-primary" id="sheet-equip">AUSRÜSTEN</button>
-      <p class="sheet-equipped" id="sheet-equipped" hidden>Ausgerüstet</p>
+      <div class="sheet-body" id="sheet-body"></div>
+      <div class="sheet-actions" id="sheet-actions"></div>
     </section>
   </main>
 
   <nav id="nav" class="nav"></nav>
+
+  <div class="boss-overlay" id="boss-overlay" hidden>
+    <div class="bo-body" id="boss-overlay-body"></div>
+    <div class="bo-actions">
+      <button class="btn-primary" id="bo-enter" hidden>DUNGEON BETRETEN</button>
+      <button class="btn-secondary" id="bo-close">WEITER</button>
+    </div>
+  </div>
 
   <div class="rotate-overlay"><p>Bitte Gerät hochkant halten</p></div>
 
